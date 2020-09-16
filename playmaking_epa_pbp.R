@@ -3,7 +3,6 @@ library(tidyverse)
 #Load season data from nflfastR repo
 games_2020 <- readRDS(url('https://raw.githubusercontent.com/guga31bb/nflfastR-data/master/data/play_by_play_2020.rds'))
 
-
 #Create dataframe of defensive plays only
 defense_pbp_2020 <- games_2020 %>%
   filter(play_type != "punt" & play_type != "kickoff" & !is.na(play_type)) %>%
@@ -119,5 +118,5 @@ playmaking_epa_2020 <- defense_2020_df_merged %>%
     playmaking_wpa = abs(sum(wpa[!is.na(wpa)]))
             )
 
-#View tables
+#View table
 View(playmaking_epa_2020)
