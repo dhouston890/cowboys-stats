@@ -1,4 +1,7 @@
-library(tidyverse)
+#THIS CODE HAS BEEN RETIRED. TO GENERATE PLAYMAKING EPA, USE DAN MORSE'S UPDATED CODE AT THE GITHUB URL BELOW
+https://github.com/danmorse314/nfl-stuff/blob/main/playmaking_epa_function.R
+
+#RETIRED CODE BELOW — CONTAINS ERRORS THAT EXCLUDED HALF-SACKS AND CERTAIN TYPES OF TACKLES
 
 library(tidyverse)
 
