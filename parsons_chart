@@ -1,0 +1,28 @@
+#Load packages
+library(nflreadr)
+library(scales)
+library(tidyverse)
+
+#create dataset
+part_2016_2021 <- load_participation(seasons = 2016:2021)
+pbp_2016_2021 <- load_pbp(seasons = 2016:2021)
+pbp_withpart_2016_2021 <- left_join(pbp_2016_2021, part_2016_2021, by = c('old_game_id' = 'old_game_id', 'play_id' = 'play_id'))
+
+#create chart
+pbp_withpart_2016_2021 |> 
+  filter(!is.na(offense_personnel), !is.na(epa), !is.na(xpass),
+         play_type == "run" | play_type == "pass",
+         qb_kneel != 1, qb_spike != 1,
+         defteam == "DAL",
+         season == 2021, down == 3, ydstogo <= 10) |>
+  mutate(parsons_on_field = str_detect(defense_players, '00-0036932')) |>
+  ggplot(aes(ydstogo, epa, color = parsons_on_field, fill = parsons_on_field)) +
+  geom_smooth(method = 'loess', span = 0.85) +
+  theme_light() +
+  theme(text = element_text(size = 17)) +
+  scale_x_reverse(breaks= scales::pretty_breaks()) +
+  labs(title = "3rd down defense, with and without Parsons",
+       subtitle = "Dallas defensive results on 3rd down, 2021",
+       y = "EPA by opposing offense",
+       x = "Yards to go on 3rd down",
+       caption = "Data from nflfastR + nflreadr | Chart by @CowboysStats")
