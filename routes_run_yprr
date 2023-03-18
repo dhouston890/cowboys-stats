@@ -7,21 +7,16 @@ library(nflverse)
 #(participation data only goes back to 2016)
 #some laptops may struggle with more than a season of data at a time
 
-pbp_for_routes <- load_pbp(2022)
-participation <- load_participation(2022)
+pbp_for_routes <- load_participation(2022, include_pbp = TRUE)
 players <- load_players()
 
 #extract offensive player IDs
 
-participation_player_rows <- participation %>%
+player_rows_pbp <- pbp_for_routes %>%
   mutate(offense_player_id = str_extract_all(offense_players, "\\d{2}-\\d{7}")) %>%
   unnest(offense_player_id)
 
-#join player ID rows with play-by-play data
-
-player_rows_pbp <- left_join(participation_player_rows, pbp_for_routes, by = c("nflverse_game_id" = "game_id", "play_id" = "play_id"))
-
-#add player info to joined dataset
+#add player info to dataset
 
 player_rows_pbp <- left_join(player_rows_pbp, players, by = c("offense_player_id" = "gsis_id"))
 
