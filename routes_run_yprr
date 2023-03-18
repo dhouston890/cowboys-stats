@@ -1,29 +1,35 @@
 #load packages
+
 library(tidyverse)
 library(nflverse)
 
 #load the data 
 #(participation data only goes back to 2016)
 #some laptops may struggle with more than a season of data at a time
+
 pbp_for_routes <- load_pbp(2022)
 participation <- load_participation(2022)
 players <- load_players()
 
-#extract offensive player IDs and create a row for each ID on every play
+#extract offensive player IDs
+
 participation_player_rows <- participation %>%
   mutate(offense_player_id = str_extract_all(offense_players, "\\d{2}-\\d{7}")) %>%
   unnest(offense_player_id)
 
 #join player ID rows with play-by-play data
+
 player_rows_pbp <- left_join(participation_player_rows, pbp_for_routes, by = c("nflverse_game_id" = "game_id", "play_id" = "play_id"))
 
 #add player info to joined dataset
+
 player_rows_pbp <- left_join(player_rows_pbp, players, by = c("offense_player_id" = "gsis_id"))
 
 #Example of a 2022 season summary for WRs 
 #results include playoff games and targeted plays with penalty yardage
 #"routes run" includes passing plays where a player was assigned to block
 #WRs almost never block on pass plays, but TEs and RBs sometimes do
+
 routes_run_data <- player_rows_pbp |>
   #add additional season or situational filters here, if desired
   filter(pass == 1, season == 2022,
