@@ -12,8 +12,8 @@ players <- load_players()
 
 #extract offensive player IDs
 
-player_rows_pbp <- pbp_for_routes %>%
-  mutate(offense_player_id = str_extract_all(offense_players, "\\d{2}-\\d{7}")) %>%
+player_rows_pbp <- pbp_for_routes |>
+  mutate(offense_player_id = str_extract_all(offense_players, "\\d{2}-\\d{7}")) |>
   unnest(offense_player_id)
 
 #add player info to dataset
