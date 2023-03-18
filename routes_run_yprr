@@ -1,0 +1,46 @@
+#load packages
+library(tidyverse)
+library(nflverse)
+
+#load the data 
+#(participation data only goes back to 2016)
+#some laptops may struggle with more than a season of data at a time
+pbp_for_routes <- load_pbp(2022)
+participation <- load_participation(2022)
+players <- load_players()
+
+#extract offensive player IDs and create a row for each ID on every play
+participation_player_rows <- participation %>%
+  mutate(offense_player_id = str_extract_all(offense_players, "\\d{2}-\\d{7}")) %>%
+  unnest(offense_player_id)
+
+#join player ID rows with play-by-play data
+player_rows_pbp <- left_join(participation_player_rows, pbp_for_routes, by = c("nflverse_game_id" = "game_id", "play_id" = "play_id"))
+
+#add player info to joined dataset
+player_rows_pbp <- left_join(player_rows_pbp, players, by = c("offense_player_id" = "gsis_id"))
+
+#Example of a 2022 season summary for WRs 
+#results include playoff games and targeted plays with penalty yardage
+#"routes run" includes passing plays where a player was assigned to block
+#WRs almost never block on pass plays, but TEs and RBs sometimes do
+routes_run_data <- player_rows_pbp |>
+  #add additional season or situational filters here, if desired
+  filter(pass == 1, season == 2022,
+         position_group == "WR") |>
+  group_by(offense_player_id) |>
+  summarise(player_name = last(display_name),
+            position = last(position_group),
+            team = last(posteam),
+            routes_run = n(),
+            targets = length(offense_player_id[offense_player_id == receiver_id & !is.na(receiver_id)]),
+            receiving_yards = sum(yards_gained[offense_player_id == receiver_id & !is.na(receiver_id) & !is.na(yards_gained)]),
+            first_downs = sum(first_down[offense_player_id == receiver_id & !is.na(receiver_id) & !is.na(first_down)]),
+            touchdowns = sum(touchdown[offense_player_id == receiver_id & !is.na(receiver_id) & !is.na(touchdown)])) |>
+  mutate(targets_per_route_run = targets / routes_run,
+         yards_per_route_run = receiving_yards / routes_run,
+         #This is Timo Riske's formula for adjusted yards per route run
+         adj_yprr = (receiving_yards + 9*first_downs + 11*touchdowns) / routes_run) |>
+  select(-offense_player_id) |>
+  filter(routes_run > 200) |>
+  arrange(-yards_per_route_run)
